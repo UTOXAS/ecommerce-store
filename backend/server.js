@@ -58,5 +58,25 @@ app.get("/cart", async (req, res) => {
     }
 });
 
+app.get("/cart/count", async (req, res) => {
+    try {
+        const response = await fetch(`${BASE_URL}/api/cart/count`);
+        const cartData = await response.json();
+
+        // console.log(`cartData: ${JSON.stringify(cartData, null, 2)}`);
+        // const cartItems = Array.isArray(cartData.products) ? cartData.products : [];
+        // const cartItems = Array.isArray(cartData) ? cartData : [];
+        cartCount = cartData.count
+        res.render("cart", {
+            cartCount,
+            baseUrl: BASE_URL,
+        });
+    } catch (error) {
+        res.status(500).send("Error loading cart");
+    }
+});
+
+// app.use("/api", require)
+
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));

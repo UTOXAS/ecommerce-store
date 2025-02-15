@@ -68,3 +68,53 @@ exports.addToCart = async (req, res) => {
         res.status(500).json({ error: "Failed to add product to cart" });
     }
 };
+
+exports.getCartCount = async (req, res) => {
+    try {
+        const cart = await Cart.findOne();
+
+        if (!cart) {
+            return res.json({ count: 0 });
+        }
+
+        const totalCount = cart.products.reduce((sum, item) => sum + item.quantity, 0);
+
+        res.json({ count: totalCount });
+    } catch (error) {
+        console.error("Error fetching cart count:", error);
+        res.status(500).json({ error: "Failed to load cart count" });
+    }
+};
+
+exports.removeCartItem = async (req, res) => {
+        console.log("📌 removerCrtItem invoked"); // Debugging
+
+    try {
+        const {productId } = req.body;
+
+        if (!mongoose.Types.ObjectId.isValid(productId)) {
+            return res.status(400).json({ error: "Invalid product ID" });
+        }
+
+        let cart = await Cart.findOne();
+
+        if (!cart) {
+            return res.status(404).json({ error: "Cart not found" });
+        }
+
+        const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
+
+        if (productIndex === -1) {
+            return res.status(404).json({ error: "Product not found in cart" });
+        }
+
+        cart.products.splice(productIndex, 1);
+
+        await cart.save();
+
+        res.json({ message: "Item removed", products: cart.products });
+    } catch (error) {
+        console.error("Error removing item from cart:", error);
+        res.status(500).json({ error: "Failed to remove product" });
+    }
+}
