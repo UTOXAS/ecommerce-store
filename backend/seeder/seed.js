@@ -19,7 +19,8 @@ const products = [
         price: 49.99,
         category: "Electronics",
         stock: 100,
-        image: `${BASE_URL}/images/placeholder_image.png`,
+        // image: `${BASE_URL}/images/placeholder_image.png`,
+        image: '/images/placeholder_image.png',
     },
     {
         name: "Smartphone",
@@ -27,7 +28,7 @@ const products = [
         price: 699.99,
         category: "Electronics",
         stock: 50,
-        image: `${BASE_URL}/images/placeholder_image.png`,
+        image: '/images/placeholder_image.png',
     },
     {
         name: "Gaming Laptop",
@@ -35,7 +36,7 @@ const products = [
         price: 1499.99,
         category: "Computers",
         stock: 30,
-        image: `${BASE_URL}/images/placeholder_image.png`,
+        image: '/images/placeholder_image.png',
     },
     {
         name: "Running Shoes",
@@ -43,7 +44,7 @@ const products = [
         price: 79.99,
         category: "Fashion",
         stock: 200,
-        image: `${BASE_URL}/images/placeholder_image.png`,
+        image: '/images/placeholder_image.png',
     },
 ];
 

@@ -37,7 +37,7 @@ exports.getCart = async (req, res) => {
 };
 
 exports.addToCart = async (req, res) => {
-    // console.log("📌 addToCart invoked"); // Debugging
+    console.log("📌 addToCart invoked"); // Debugging
     try {
         const { productId } = req.body;
 
@@ -87,7 +87,7 @@ exports.getCartCount = async (req, res) => {
 };
 
 exports.removeCartItem = async (req, res) => {
-        console.log("📌 removerCrtItem invoked"); // Debugging
+        console.log("📌 removeCartItem invoked"); // Debugging
 
     try {
         const {productId } = req.body;

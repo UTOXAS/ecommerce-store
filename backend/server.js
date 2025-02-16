@@ -13,12 +13,23 @@ const BASE_URL =
         ? process.env.PROD_BASE_URL
         : process.env.DEV_BASE_URL;
 
+const FRONTEND_BASE_URL =
+    process.env.NODE_ENV === "production"
+        ? process.env.PROD_FRONTEND_BASE_URL
+        : process.env.DEV_FRONTEND_BASE_URL;
+
+
 const app = express();
 
 app.set("view engine", "ejs");
 app.set("views", path.join(__dirname, "views"));
 
-app.use(cors());
+const corsOptions = {
+    origin: FRONTEND_BASE_URL,
+    credential: true,
+};
+
+app.use(cors(corsOptions));
 app.use(bodyParser.json());
 
 app.use(express.static(path.join(__dirname, "../frontend/public")));
@@ -28,12 +39,23 @@ app.use("/images", express.static(path.join(__dirname, "../frontend/assets/image
 app.use("/api", require("./routes/productRoutes"));
 app.use("/api", require("./routes/cartRoutes"));
 
-app.get("/", async (req, res) => {
+app.get("/", (req, res) => {
+    try {
+        // res.json({ baseUrl: BASE_URL });
+        console.log(`FRONTEND_BASE_URL: ${FRONTEND_BASE_URL}`)
+    } catch (error)  {
+        // console.error(`Error loading baseUrl ${error}`);
+        res.status(500).send("Error loading baseUrl");
+    }
+});
+
+app.get("/products", async (req, res) => {
+    console.log("app.get(\"/products\"");
     try {
         const response = await fetch(`${BASE_URL}/api/products`);
         const products = await response.json();
         res.render("index", { products,
-            baseUrl: BASE_URL,
+            // baseUrl: BASE_URL,
          });
     } catch (error) {
         res.status(500).send(`Error loading products\n${error}`);
@@ -51,7 +73,7 @@ app.get("/cart", async (req, res) => {
         // const cartItems = Array.isArray(cartData) ? cartData : [];
         res.render("cart", {
             cartItems ,
-            baseUrl: BASE_URL,
+            // baseUrl: BASE_URL,
         });
     } catch (error) {
         res.status(500).send("Error loading cart");
@@ -69,7 +91,7 @@ app.get("/cart/count", async (req, res) => {
         cartCount = cartData.count
         res.render("cart", {
             cartCount,
-            baseUrl: BASE_URL,
+            // baseUrl: BASE_URL, b
         });
     } catch (error) {
         res.status(500).send("Error loading cart");
