@@ -1,120 +1,105 @@
 const Cart = require("../models/cart");
-const mongoose = require("mongoose");
-const dotenv = require("dotenv");
 
+class CartController {
+    static async getCart(req, res) {
+        try {
+            const cart = await Cart.findOne().populate("products.productId");
+            if (!cart) return res.status(200).json({ products: [] });
 
-dotenv.config()
+            const cartItems = cart.products.map(item => ({
+                id: item._id,
+                product: {
+                    id: item.productId._id,
+                    name: item.productId.name,
+                    price: item.productId.price,
+                    image: item.productId.image,
+                },
+                quantity: item.quantity,
+                subtotal: item.quantity * item.productId.price
+            }));
 
-const BASE_URL = 
-    process.env.NODE_ENV === "production"
-        ? process.env.PROD_BASE_URL
-        : process.env.DEV_BASE_URL;
-
-exports.getCart = async (req, res) => {
-    try {
-        const cart = await Cart.findOne().populate("products.productId");
-        // console.log(`cart: ${cart}`)
-        if (!cart) {
-            return res.json({ products: [] });
+            res.status(200).json({ products: cartItems, total: cartItems.reduce((sum, item) => sum + item.subtotal, 0) });
+        } catch (error) {
+            res.status(500).json({ message: "Error fetching cart", error: error.message });
         }
-
-        const cartItems = cart.products.map(item => ({
-            _id: item._id,
-            productId: item.productId._id,
-            name: item.productId.name,
-            price: item.productId.price,
-            image: item.productId.image || `${BASE_URL}/images/placeholder_image.png`,
-            quantity: item.quantity
-        }));
-
-        // console.log(`cartItems: ${JSON}`)
-        // res.json(cart);
-        res.json({ products: cartItems });
-    } catch(error) {
-        console.error("Error fetching cart:", error);
-        res.status(500).json({ error: "Failed to load cart" });
     }
-};
 
-exports.addToCart = async (req, res) => {
-    console.log("📌 addToCart invoked"); // Debugging
-    try {
-        const { productId } = req.body;
+    static async addToCart(req, res) {
+        try {
+            const { productId, quantity = 1 } = req.body;
+            if (!productId) return res.status(400).json({ message: "Product ID is required" });
 
-        if (!mongoose.Types.ObjectId.isValid(productId)) {
-            return res.status(400).json({ error: "Invalid product ID" });
+            let cart = await Cart.findOne();
+            if (!cart) cart = new Cart({ products: [] });
+
+            const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
+            if (productIndex > -1) {
+                cart.products[productIndex].quantity += quantity;
+            } else {
+                cart.products.push({ productId, quantity: 1 });
+            }
+
+            await cart.save();
+            const updatedCart = await Cart.findOne().populate("products.productId");
+            res.status(200).json(updatedCart);
+        } catch (error) {
+            res.status(500).json({ message: "Error adding to cart", error: error.message });
         }
-
-        let cart = await Cart.findOne();
-
-        if (!cart) {
-            cart = new Cart({ products: []});
-        }
-
-        const existingProduct = cart.products.find(p => p.productId.toString() === productId);
-        if (existingProduct) {
-            existingProduct.quantity++;
-        } else {
-            cart.products.push({ productId, quantity: 1 });
-        }
-
-        await cart.save();
-
-        const updatedCart = await Cart.findOne().populate("products.productId");
-
-        res.json({ products: updatedCart.products });
-    } catch (error) {
-        console.error("Error adding to cart:", error);
-        res.status(500).json({ error: "Failed to add product to cart" });
     }
-};
 
-exports.getCartCount = async (req, res) => {
-    try {
-        const cart = await Cart.findOne();
 
-        if (!cart) {
-            return res.json({ count: 0 });
+    static async removeCartItem(req, res) {
+        try {
+            const { productId } = req.body;
+            if (!productId) return res.status(400).json({ message: "Product ID is required" });
+
+            const cart = await Cart.findOne();
+            if (!cart) return res.status(404).json({ message: "Cart not found" });
+
+            const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
+            if (productIndex === -1) {
+                return res.status(404).json({ message: "Product not found in cart" });
+            }
+
+            cart.products.splice(productIndex, 1);
+            await cart.save();
+
+            const updatedCart = await Cart.findOne().populate("products.productId");
+            const cartItems = updatedCart ? updatedCart.products.map(item => ({
+                id: item._id,
+                product: {
+                    id: item.productId._id,
+                    name: item.productId.name,
+                    price: item.productId.price,
+                    image: item.productId.image,
+                },
+                quantity: item.quantity,
+                subtotal: item.quantity * item.productId.price
+            })) : [];
+
+            res.status(200).json({
+                message: "Item removed successfully",
+                products: cartItems,
+                total: cartItems.reduce((sum, item) => sum + item.subtotal, 0)
+            });
+        } catch (error) {
+            res.status(500).json({ message: "Error removing item from cart", error: error.message });
         }
-
-        const totalCount = cart.products.reduce((sum, item) => sum + item.quantity, 0);
-
-        res.json({ count: totalCount });
-    } catch (error) {
-        console.error("Error fetching cart count:", error);
-        res.status(500).json({ error: "Failed to load cart count" });
     }
-};
 
-exports.removeCartItem = async (req, res) => {
-        console.log("📌 removeCartItem invoked"); // Debugging
+    static async getCartCount(rea, res) {
+        try {
+            const cart = await Cart.findOne();
 
-    try {
-        const {productId } = req.body;
+            if (!cart) return res.status(200).json({ count: 0 });
+            const totalCount = cart.products.reduce((sum, item) => sum + item.quantity, 0);
 
-        if (!mongoose.Types.ObjectId.isValid(productId)) {
-            return res.status(400).json({ error: "Invalid product ID" });
+            res.status(200).json({ count: totalCount });
+        } catch (error) {
+            res.status(500).json({ message: "Error fetching cart count", error: error.message });
         }
-
-        let cart = await Cart.findOne();
-
-        if (!cart) {
-            return res.status(404).json({ error: "Cart not found" });
-        }
-
-        const productIndex = cart.products.findIndex(p => p.productId.toString() === productId);
-
-        if (productIndex === -1) {
-            return res.status(404).json({ error: "Product not found in cart" });
-        }
-
-        cart.products.splice(productIndex, 1);
-
-        await cart.save();
-
-        res.json({ message: "Item removed", products: cart.products });
-    } catch (error) {
-        console.error("Error removing item from cart:", error);
-        res.status(500).json({ error: "Failed to remove product" });
     }
+
 }
+
+module.exports = CartController;

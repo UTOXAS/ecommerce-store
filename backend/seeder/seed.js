@@ -6,10 +6,7 @@ const Cart = require("../models/cart");
 
 dotenv.config()
 
-const BASE_URL = 
-    process.env.NODE_ENV === "production"
-        ? process.env.PROD_BASE_URL
-        : process.env.DEV_BASE_URL;
+const BASE_URL = process.env.API_BASE_URL || "http://localhost:5000";
 
 // Sample product data
 const products = [
@@ -18,8 +15,6 @@ const products = [
         description: "High-quality wireless headphones with noise cancellation.",
         price: 49.99,
         category: "Electronics",
-        stock: 100,
-        // image: `${BASE_URL}/images/placeholder_image.png`,
         image: '/images/placeholder_image.png',
     },
     {
@@ -27,7 +22,6 @@ const products = [
         description: "Latest model smartphone with OLED display and 128GB storage.",
         price: 699.99,
         category: "Electronics",
-        stock: 50,
         image: '/images/placeholder_image.png',
     },
     {
@@ -35,7 +29,6 @@ const products = [
         description: "Powerful gaming laptop with RTX 3070 GPU and 16GB RAM.",
         price: 1499.99,
         category: "Computers",
-        stock: 30,
         image: '/images/placeholder_image.png',
     },
     {
@@ -43,7 +36,6 @@ const products = [
         description: "Lightweight and comfortable running shoes for daily use.",
         price: 79.99,
         category: "Fashion",
-        stock: 200,
         image: '/images/placeholder_image.png',
     },
 ];
@@ -54,13 +46,17 @@ const seedDatabase = async () => {
         await connectDB();
         await Product.deleteMany();
         await Cart.deleteMany();
-        await Product.insertMany(products);
-        console.log("✅ Database Seeded Successfully!");
-        mongoose.connection.close();
+        const insertedProducts = await Product.insertMany(products);
+        console.log(`✅ Database Seeded Successfully! Added ${insertedProducts.length} products.`); mongoose.connection.close();
     } catch (error) {
         console.error("❌ Seeding Failed:", error);
         mongoose.connection.close();
+        process.exit(1);
     }
 };
 
-seedDatabase();
+module.exports = seedDatabase;
+
+if (require.main === module) {
+    seedDatabase();
+}

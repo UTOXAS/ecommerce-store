@@ -1,77 +1,63 @@
 import { useContext, useEffect, useState } from "react";
-import { AppContext } from "../AppContext";
+import { AppContext } from "../contexts/AppContext";
 
 // import { Link } from "react-router-dom";
 
 const Home = () => {
+    const { apiBaseUrl, fetchCartCount, loading } = useContext(AppContext);
     const [products, setProducts] = useState([]);
-    // const [baseUrl, setBaseUrl] = useState("");    
-    const {fetchCartCount} = useContext(AppContext);
 
     useEffect(() => {
-        const fetchBaseUrlAndProducts = async () => {
+        const fetchProducts = async () => {
             try {
-                const baseUrl = process.env.REACT_APP_DEV_BASE_URL;
-                // console.log(`${baseUrl}/api/products`);
-                // const configResponse = await fetch("/api/config");
-                // const configData = await configResponse.json();
-                // setBaseUrl(configData.baseUrl);
-
-                const productResponse = await fetch(`${baseUrl}/api/products`);
-                const productData = await productResponse.json();
-                setProducts(productData);
-
+                const response = await fetch(`${apiBaseUrl}/api/products`);
+                const data = await response.json();
+                setProducts(data);
             } catch (error) {
                 console.error("Error fetching products:", error);
             }
-            
-            // try {
-
-            // } catch (error) {
-            //     console.error("Error fetching products:", error);
-            // }
         };
+        fetchProducts();
+    }, [apiBaseUrl]);
 
-        fetchBaseUrlAndProducts();
-    }, []);
-
-    const addToCart = async(productId) => {
+    const addToCart = async (productId) => {
         try {
-            const baseUrl = process.env.REACT_APP_DEV_BASE_URL;
-            const response = await fetch(`${baseUrl}/api/cart/add` , {
+            fetch(`${apiBaseUrl}/api/cart/add`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ productId, quantity: 1 }),
+                body: JSON.stringify({ productId }),
             });
-
-            if (!response.ok) throw new Error("Failed to add to cart");
-
             fetchCartCount();
         } catch (error) {
-            console.error("Error:", error);
+            console.error("Error adding to cart:", error);
         }
     };
 
+    if (loading) return <div className="text-center py-5">Loading...</div>;
+
     return (
-        <div className="container mt-4">
-            <h1 className="text-center my-4">Our Products</h1>
-            <div className="row">
+        <div className="py-4">
+            <h1 className="text-center mb-5 fw-light">Our Collection</h1>
+            <div className="row g-4">
                 {products.map((product) => (
-                    
-                    <div className="col-md-4" key={product._id}>
-                        <div className="card mb-4">
+                    <div key={product._id} className="col-md-4 col-sm-6">
+                        <div className="card h-100 border-0 shadow-sm">
                             <img src={product.image} className="card-img-top" alt={product.name} />
                             <div className="card-body">
-                                <h5 className="card-title">{product.name}</h5>
-                                <p className="card-text">{product.description}</p>
-                                <p className="card-text">${product.price}</p>
-                                {/* <Link to="/cart/add" className="btn btn-primary">Add to Cart</Link> */}
-                                <button className="btn btn-primary" onClick={() => addToCart(product._id)}>
-                                    Add to Cart
-                                </button>
+                                <h5 className="card-title fw-normal">{product.name}</h5>
+                                <p className="card-text text-muted small">{product.description}</p>
+                                <div className="d-flex justify-content-between align-items.center">
+                                    <span className="fw-bold">${product.price.toFixed(2)}</span>
+                                    <button
+                                        className="btn btn-outline-dark btn-sm"
+                                        onClick={() => addToCart(product._id)}
+                                    >
+                                        Add to Cart
+                                    </button>
+                                </div>
                             </div>
-                            </div>
-                            </div>
+                        </div>
+                    </div>
                 ))}
             </div>
         </div>

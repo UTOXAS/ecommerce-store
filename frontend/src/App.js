@@ -1,23 +1,21 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
-import Header from "./components/Header";
-import Footer from "./components/Footer";
+import { AppProvider } from "./contexts/AppContext";
+import Layout from "./components/Layout";
 import Home from "./pages/Home";
 import Cart from "./pages/Cart";
 
 function App() {
   return (
-    // <AppProvider>
+    <AppProvider>
       <Router>
-        <Header />
-        <main>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/cart" element={<Cart />} />
-        </Routes>
-        </main>
-        <Footer />
+        <Layout>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/cart" element={<Cart />} />
+          </Routes>
+        </Layout>
       </Router>
-    // </AppProvider>
+    </AppProvider>
   );
 }
 

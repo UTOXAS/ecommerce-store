@@ -1,93 +1,80 @@
 import { useContext, useEffect, useState } from "react";
-import { AppContext } from "../AppContext";
+import { AppContext } from "../contexts/AppContext";
 
 const Cart = () => {
+    const { apiBaseUrl, fetchCartCount, loading } = useContext(AppContext);
     const [cartItems, setCartItems] = useState([]);
-    // const [itemTotalPrice, setItemTotalPrice] = useState(0);
-    const {fetchCartCount} = useContext(AppContext);
-    // const [baseUrl, setBaseUrl] = useState("");
 
     useEffect(() => {
-        const fetchBaseUrlAndCartItems = async () => {
+        const fetchCart = async () => {
             try {
-                const baseUrl = process.env.REACT_APP_DEV_BASE_URL;
-                // const configResponse = await fetch("/api/config");
-                // const configData = await configResponse.json();
-                // setBaseUrl(configData.baseUrl);
-
-                const cartItems = await fetch(`${baseUrl}/api/cart`);
-                const cartData = await cartItems.json();
-                setCartItems(cartData.products || []);
+                const response = await fetch(`${apiBaseUrl}/api/cart`);
+                const data = await response.json();
+                setCartItems(data.products || []);
             } catch (error) {
                 console.error("Error fetching cart:", error);
-            } 
+            }
         };
+        fetchCart();
+    }, [apiBaseUrl]);
 
-        fetchBaseUrlAndCartItems();
-    }, []);
-
-    const removeFromCart = async(productId) => {
+    const removeFromCart = async (productId) => {
         try {
-            const baseUrl = process.env.REACT_APP_DEV_BASE_URL;
-            const response = await fetch(`${baseUrl}/api/cart/remove` , {
+            await fetch(`${apiBaseUrl}/api/cart/remove`, {
                 method: "DELETE",
-                headers: {"Content-Type": "application/json "},
+                headers: { "Content-Type": "application/json " },
                 body: JSON.stringify({ productId }),
             });
-            
-            if (response.ok) {
-                window.location.reload();
-            } else {
-                throw new Error("Failed to remove from cart");
-            }
-            // if (!response.ok) 
+
+            setCartItems(prev => prev.filter(item => item.product.id !== productId));
             fetchCartCount();
         } catch (error) {
-            console.error("Error:", error);
+            console.error("Error removing from cart:", error);
         }
     };
 
-    const calculateItemTotal = (item) => {
-        return item.price * item.quantity;
-    };
+    const total = cartItems.reduce((sum, item) => sum + item.subtotal, 0);
 
-    const calculateTotalSum = () => {
-        return cartItems.reduce((total, item) => total + calculateItemTotal(item), 0);
-    };
+    if (loading) return <div className="text-center py-5">Loading...</div>
 
     return (
-        <div className="container mt-4">
-            <h1 className="text-center my-4">Shopping Cart</h1>
-            <div className="row">
-                {cartItems.length === 0 ? (
-                    <p className="text-center">Your cart is empty.</p>
-                ) : (
-                    cartItems.map((item) => (
-                        <div className="col-md-12 cart-items" key={item.productId}>
-                            <div className="card mb-3">
-                                <div className="card-body d-flex justify-content-between align-items-center">
-                                    <div>
-                                        <h5 className="card-title">{item.name}</h5>
-                                        <p className="card-text">Price: ${item.price.toFixed(2)}</p>
-                                        <p className="card-text">Quantity: <strong>{item.quantity}</strong></p>
-                                        <p className="card-text"><strong>Total: {calculateItemTotal(item).toFixed(2)}</strong></p>
-                                        <button className="btn btn-danger" onClick={() => removeFromCart(item.productId)}>
+        <div className="py-4">
+            <h1 className="text-center mb-5 fw-light">Your Cart</h1>
+            {cartItems.length === 0 ? (
+                <p className="text-center text-musted">Your cart is empty</p>
+            ) : (
+                <>
+                    <div className="row g-4">
+                        {cartItems.map((item) => (
+                            <div key={item.id} className="col-12">
+                                <div className="card border-0 shadow-sm">
+                                    <div className="card-body d-flex align-items-center">
+                                        <img src={item.product.image} alt={item.product.name} className="me-3" style={{ width: "80px" }} />
+                                        <div className="flex-grow-1">
+                                            <h5 className="mb-1 fw-normal">{item.product.name}</h5>
+                                            <p className="mb-1 small text-muted">Quantity: {item.quantity}</p>
+                                            <p className="mb-0 fw-bold">${item.subtotal.toFixed(2)}</p>
+                                        </div>
+                                        <button
+                                            className="btn btn-outline-danger btn-sm"
+                                            onClick={() => removeFromCart(item.product.id)}
+                                        >
                                             Remove
                                         </button>
                                     </div>
-                                    <img src={item.image} alt={item.name} className="img-fluid rounded" />
                                 </div>
-                                </div>
-                                </div>
+                            </div>
 
-                    ))
-                    
-                )}
-                                                <div className="text-end">
-                                    <h4>Total Price: <strong>{calculateTotalSum().toFixed(2)}</strong></h4>
-                                    </div>
-            </div>
-        </div>
+
+                        ))}
+                    </div>
+                    <div className="bt-4 text-end">
+                        <h4 className="fw-light">Total: <span className="fw-bold">${total.toFixed(2)}</span></h4>
+                        <button className="btn btn-dark mt-2">Checkout</button>
+                    </div>
+                </>
+            )}
+        </div >
     );
 };
 

@@ -1,8 +1,12 @@
+// import { find } from "../models/product";
+
 const Product = require("../models/product");
 
 exports.getProducts = async (req, res) => {
-    // console.log("getProducts");
-    const products = await Product.find();
-    // console.log(products);
-    res.json(products);
-}
+    try {
+        const products = await Product.find();
+        res.status(200).json(products);
+    } catch (error) {
+        res.status(500).json({ message: "Error fetcing products", error: error.message });
+    }
+};

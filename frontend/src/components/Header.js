@@ -1,32 +1,17 @@
 import { useContext, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { AppContext } from "../AppContext";
+import { AppContext } from "../contexts/AppContext";
 
 const Header = () => {
-    const {fetchCartCount, cartCount} = useContext(AppContext);
-
+    const { cartCount, fetchCartCount } = useContext(AppContext);
     useEffect(() => {
-        // const fetchCartCount = async () => {
-        //     try {
-        //         const baseUrl = process.env.REACT_APP_DEV_BASE_URL;
-        //         const cartCountResponse = await fetch(`${baseUrl}/api/cart/count`);
-        //         const cartCountData = await cartCountResponse.json();
-        //         // console.log(cartResponse);
-        //         setCartCount(cartCountData.count || 0);
-        //     } catch (error) {
-        //         console.error("Error fetching cart count:" , error);
-        //     }
-        // };
-
         fetchCartCount();
-    }, []);
+    }, [fetchCartCount]);
+
     return (
-
-        
-
-        <nav className="navbar navbar-expand-lg navbar-dark bg-primary">
+        <nav className="navbar navbar-expand-lg navbar-dark bg-dark">
             <div className="container">
-                <Link className="navbar-brand" to="/">Storefront</Link>
+                <Link className="navbar-brand fw-bold" to="/">Storefront</Link>
                 <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
                     <span className="navbar-toggler-icon"></span>
                 </button>
@@ -36,7 +21,11 @@ const Header = () => {
                             <Link className="nav-link" to="/">Home</Link>
                         </li>
                         <li className="nav-item">
-                            <Link className="nav-link" to="/cart">Cart <span className="badge bg-light text-dark">{cartCount}</span></Link>
+                            <Link className="nav-link" to="/cart">
+                                Cart {cartCount > 0 && (
+                                    <span className="badge bg-light text-dark ms-1">{cartCount}</span>
+                                )}
+                            </Link>
                         </li>
                     </ul>
                 </div>
