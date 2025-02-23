@@ -46,7 +46,7 @@ const Home = () => {
                             <div className="card-body">
                                 <h5 className="card-title fw-normal">{product.name}</h5>
                                 <p className="card-text text-muted small">{product.description}</p>
-                                <div className="d-flex justify-content-between align-items.center">
+                                <div className="d-flex justify-content-between align-items-center">
                                     <span className="fw-bold">${product.price.toFixed(2)}</span>
                                     <button
                                         className="btn btn-outline-dark btn-sm"

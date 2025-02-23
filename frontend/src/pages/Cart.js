@@ -41,7 +41,7 @@ const Cart = () => {
         <div className="py-4">
             <h1 className="text-center mb-5 fw-light">Your Cart</h1>
             {cartItems.length === 0 ? (
-                <p className="text-center text-musted">Your cart is empty</p>
+                <p className="text-center text-muted">Your cart is empty</p>
             ) : (
                 <>
                     <div className="row g-4">
