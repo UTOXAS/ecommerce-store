@@ -1,7 +1,0 @@
-frontend/
-└── src
-    ├── assets
-    │   └── images
-    │       └── placeholder_image.png
-    └── pages
-        └── Home.js
